@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valentine's Photobooth | Digital Copy</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .font-script {
+            font-family: 'Great Vibes', cursive;
+        }
+
+        /* Floating Hearts Animation */
+        .hearts-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .heart {
+            position: absolute;
+            bottom: -100px;
+            width: 20px;
+            height: 20px;
+            background: rgba(236, 72, 153, 0.2);
+            transform: rotate(45deg);
+            animation: float linear infinite;
+        }
+
+        .heart::before,
+        .heart::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: inherit;
+            border-radius: 50%;
+        }
+
+        .heart::before {
+            top: -10px;
+            left: 0;
+        }
+
+        .heart::after {
+            top: 0;
+            left: -10px;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(45deg) scale(0.8);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-120vh) rotate(45deg) scale(1.2);
+                opacity: 0;
+            }
+        }
+
+        /* Glassmorphism Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(236, 72, 153, 0.15);
+        }
+
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #db2777;
+            width: 24px;
+            height: 24px;
+            -webkit-animation: spin 1s linear infinite; /* Safari */
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+
+    <!-- Background Animation -->
+    <div class="hearts-bg" id="heartsContainer"></div>
+
+    <!-- Main Container -->
+    <main class="glass-card w-full max-w-md rounded-3xl p-8 relative z-10 transition-all duration-300">
+        
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-pink-100 rounded-full mb-4 text-pink-600">
+                <i data-lucide="camera" class="w-8 h-8"></i>
+            </div>
+            <h1 class="font-script text-5xl text-pink-600 mb-2">Love & Memories</h1>
+            <p class="text-gray-600 text-sm tracking-wide">PHOTOBOOTH DOWNLOADER</p>
+        </div>
+
+        <!-- Search Form -->
+        <div id="searchSection">
+            <div class="mb-6">
+                <label for="controlNumber" class="block text-gray-700 text-sm font-semibold mb-2 ml-1">Control Number</label>
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        id="controlNumber" 
+                        placeholder="e.g. IMG_1024" 
+                        class="w-full px-5 py-4 rounded-xl border-2 border-pink-100 bg-white focus:border-pink-400 focus:outline-none focus:ring-4 focus:ring-pink-100 transition-all text-gray-700 text-lg placeholder-gray-300"
+                    >
+                    <div class="absolute right-4 top-4 text-pink-300">
+                        <i data-lucide="heart" class="w-6 h-6 fill-current opacity-50"></i>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-400 mt-2 ml-1">*Enter the code found on your printed photo</p>
+            </div>
+
+            <button 
+                onclick="findPhoto()" 
+                class="w-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-semibold py-4 rounded-xl shadow-lg transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+            >
+                <span>Find My Photo</span>
+                <i data-lucide="search" class="w-4 h-4"></i>
+            </button>
+            
+            <p id="errorMessage" class="text-red-500 text-center mt-4 text-sm hidden flex items-center justify-center gap-2">
+                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                <span>Photo not found. Please check the number.</span>
+            </p>
+        </div>
+
+        <!-- Result Section (Hidden by default) -->
+        <div id="resultSection" class="hidden text-center fade-in">
+            <div class="bg-white p-2 rounded-2xl shadow-sm border border-pink-100 mb-6 relative">
+                <!-- Loading State -->
+                <div id="imageLoader" class="h-48 flex items-center justify-center bg-gray-50 rounded-xl">
+                    <div class="loader"></div>
+                </div>
+                
+                <!-- Actual Image -->
+                <img 
+                    id="previewImage" 
+                    alt="Your Photobooth Picture" 
+                    class="w-full rounded-xl hidden object-cover"
+                >
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <a 
+                    id="downloadLink" 
+                    href="#" 
+                    download 
+                    class="w-full bg-pink-600 text-white font-semibold py-4 rounded-xl shadow-lg hover:bg-pink-700 transition-colors flex items-center justify-center gap-2"
+                >
+                    <i data-lucide="download" class="w-5 h-5"></i>
+                    Download Digital Copy
+                </a>
+                
+                <button 
+                    onclick="resetForm()" 
+                    class="w-full bg-transparent text-gray-500 font-medium py-3 rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                    Search Another
+                </button>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="mt-8 text-center border-t border-gray-100 pt-4">
+            <p class="text-xs text-gray-400">Happy Valentine's Day! ❤️</p>
+        </div>
+    </main>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Create Background Hearts
+        function createHearts() {
+            const container = document.getElementById('heartsContainer');
+            const heartCount = 20;
+
+            for (let i = 0; i < heartCount; i++) {
+                const heart = document.createElement('div');
+                heart.classList.add('heart');
+                heart.style.left = Math.random() * 100 + 'vw';
+                heart.style.animationDuration = Math.random() * 3 + 4 + 's'; // 4-7s
+                heart.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(heart);
+            }
+        }
+        createHearts();
+
+        // Elements
+        const searchSection = document.getElementById('searchSection');
+        const resultSection = document.getElementById('resultSection');
+        const controlInput = document.getElementById('controlNumber');
+        const errorMessage = document.getElementById('errorMessage');
+        const previewImage = document.getElementById('previewImage');
+        const downloadLink = document.getElementById('downloadLink');
+        const imageLoader = document.getElementById('imageLoader');
+
+        function findPhoto() {
+            const code = controlInput.value.trim();
+            
+            if (!code) {
+                controlInput.focus();
+                return;
+            }
+
+            // Hide previous errors
+            errorMessage.classList.add('hidden');
+
+            // 1. Construct filename (Assuming JPG based on request context)
+            // You can change '.jpg' to '.png' if your photobooth saves as PNG
+            const fileName = `${code}.jpg`;
+            
+            // 2. Switch UI
+            searchSection.classList.add('hidden');
+            resultSection.classList.remove('hidden');
+            
+            // Reset Image State
+            previewImage.classList.add('hidden');
+            imageLoader.classList.remove('hidden');
+
+            // 3. Try to load image
+            previewImage.src = fileName;
+            
+            previewImage.onload = function() {
+                // Image Found
+                imageLoader.classList.add('hidden');
+                previewImage.classList.remove('hidden');
+                
+                // Setup Download Link
+                downloadLink.href = fileName;
+                downloadLink.setAttribute('download', `Valentine_Photobooth_${code}.jpg`);
+            };
+
+            previewImage.onerror = function() {
+                // Image Not Found - Go back to search
+                resetForm();
+                errorMessage.classList.remove('hidden');
+            };
+        }
+
+        function resetForm() {
+            resultSection.classList.add('hidden');
+            searchSection.classList.remove('hidden');
+            controlInput.value = '';
+            controlInput.focus();
+            errorMessage.classList.add('hidden');
+        }
+
+        // Allow "Enter" key to search
+        controlInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                findPhoto();
+            }
+        });
+    </script>
+</body>
+</html>
+
